@@ -14,11 +14,13 @@ Backend API source code for **PlanEase** project at [alice-tat/PlanEase](https:/
     - **[GET] /task**:
     - **[PUT] /task/id**
     - **[DELETE] /task/id**
+    - **[PUT] /task/finish/id**
 - Goal-related endpoints:
     - **[POST] /goal**
     - **[GET] /goal**:
     - **[PUT] /goal/id**
     - **[DELETE] /goal/id**
+    - **[PUT] /goal/finish/id**
 
 ## How to run
 1. Clone this repo.

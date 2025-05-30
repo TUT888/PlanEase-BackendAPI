@@ -40,9 +40,9 @@ def getSuggestionFromLLM(goal, start_date, target_date, requirement):
                     f"For each task, generate the task name and expected completion date. Make sure to distribute tasks reasonably from start date to achieve goal before target date"
                     f"Format your response as follows:\n"
                     f"**TASK 1:** [Task name here]?\n"
-                    f"**DATE FOR ABOVE TASK:** [Expected completion date here]\n"
+                    f"**DATE:** [Expected completion date here]\n"
                     f"**TASK 2:** [Task name here]?\n"
-                    f"**DATE FOR ABOVE TASK:** [Expected completion date here]\n"
+                    f"**DATE:** [Expected completion date here]\n"
                     f"Number of tasks is not limited to 2, add more task based on your analysis for the given information."
                     f"Ensure text is properly formatted. It needs to start with a task name, then the completion date."
                     f"Follow this pattern for all tasks. "
@@ -70,7 +70,7 @@ def process_answer(answer_text):
     # Updated regex to match bolded format with numbered questions
     pattern = re.compile(
         r'\*\*TASK \d+:\*\*\s+(.+?)\s+'
-        r'\*\*DATE FOR ABOVE TASK:\*\*\s+(.+?)\s+',
+        r'\*\*DATE:\*\*\s+(.+?)\s+',
         re.DOTALL
     )
     matches = pattern.findall(answer_text)
@@ -80,8 +80,8 @@ def process_answer(answer_text):
         date = match[1].strip()
 
         task_data = {
-            "name": task_name,
-            "date": date
+            "name": task_name.replace("*", ""),
+            "date": date.replace("*", "")
         }
         task_list.append(task_data)
     
@@ -207,10 +207,18 @@ def add_task():
 @app.route("/task", methods=["GET"])
 def get_all_tasks():
     try:
-        tasks = list(mongo.db.tasks.find({
-            "user_id": ObjectId(request.args['user_id']),
-            "finish": request.args['finish'] == "1"
-        }))
+        if (request.args['goal_id'] != ""):
+            goal_id = ObjectId(request.args['goal_id'])
+            tasks = list(mongo.db.tasks.find({
+                "user_id": ObjectId(request.args['user_id']),
+                "goal_id": ObjectId(goal_id),
+                "finish": request.args['finish'] == "1"
+            }))
+        else:
+            tasks = list(mongo.db.tasks.find({
+                "user_id": ObjectId(request.args['user_id']),
+                "finish": request.args['finish'] == "1"
+            }))
         
         for task in tasks:
             task["_id"] = str(task["_id"])
@@ -251,6 +259,23 @@ def delete_task(id):
         return jsonify({"error": "Task not found"}), 404
     except Exception as e:
         return jsonify({"error": f"Failed to delete task: {str(e)}"}), 400
+    
+@app.route("/task/finish/<id>", methods=["PUT"])
+def mark_finish_task(id):
+    try:
+        task_data = {
+            "finish": True
+        }
+        result = mongo.db.tasks.update_one(
+            {"_id": ObjectId(id)},
+            {"$set": task_data}
+        )
+        
+        if result.modified_count:
+            return jsonify({"message": "Task updated successfully"}), 200
+        return jsonify({"error": "Task not found"}), 404
+    except Exception as e:
+        return jsonify({"error": f"Failed to update task: {str(e)}"}), 400
     
 # ========== Goal routes ========== #
 @app.route("/goal", methods=["POST"])
@@ -300,6 +325,23 @@ def update_goal(id):
             goal_data["_id"] = id
             goal_data["user_id"] = str(goal_data["user_id"])
             return jsonify({"message": "Goal updated successfully", "goal": goal_data}), 200
+        return jsonify({"error": "Goal not found"}), 404
+    except Exception as e:
+        return jsonify({"error": f"Failed to update goal: {str(e)}"}), 400
+
+@app.route("/goal/finish/<id>", methods=["PUT"])
+def mark_finish_goal(id):
+    try:
+        goal_data = {
+            "finish": True
+        }
+        result = mongo.db.goals.update_one(
+            {"_id": ObjectId(id)},
+            {"$set": goal_data}
+        )
+        
+        if result.modified_count:
+            return jsonify({"message": "Goal updated successfully"}), 200
         return jsonify({"error": "Goal not found"}), 404
     except Exception as e:
         return jsonify({"error": f"Failed to update goal: {str(e)}"}), 400
