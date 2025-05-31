@@ -322,9 +322,7 @@ def update_goal(id):
         )
         
         if result.modified_count:
-            goal_data["_id"] = id
-            goal_data["user_id"] = str(goal_data["user_id"])
-            return jsonify({"message": "Goal updated successfully", "goal": goal_data}), 200
+            return jsonify({"message": "Goal updated successfully"}), 200
         return jsonify({"error": "Goal not found"}), 404
     except Exception as e:
         return jsonify({"error": f"Failed to update goal: {str(e)}"}), 400
