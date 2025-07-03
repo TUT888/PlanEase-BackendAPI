@@ -1,5 +1,5 @@
 # Backend API for PlanEase - Android Application
-Backend API source code for **PlanEase** project at [alice-tat/PlanEase](https://github.com/alice-tat/PlanEase)
+Backend API source code for **PlanEase** project at [TUT888/PlanEase-AndroidApp](https://github.com/TUT888/PlanEase-AndroidApp)
 
 ## API endpoints
 - AI-related endpoints:
